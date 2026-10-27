@@ -1,0 +1,6 @@
+{
+  "name": "ForexBot Pro",
+  "description": "Multi-Broker Forex Auto Trading Platform with MetaApi, Gemini Vision AI, and 7 Automated Strategies",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

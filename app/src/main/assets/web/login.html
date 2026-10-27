@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login & Subscription — ForexBot Pro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://js.paystack.co/v1/inline.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: '#00ff88',
+            brandDark: '#052e16',
+            darkBg: '#0a0a0a',
+            darkCard: '#141417',
+            darkBorder: '#27272a'
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-darkBg min-h-screen text-zinc-100 font-sans flex flex-col justify-between p-4 selection:bg-brand selection:text-black">
+
+  <!-- Header -->
+  <header class="max-w-4xl mx-auto w-full py-4 flex items-center justify-between border-b border-darkBorder">
+    <a href="/index.html" class="flex items-center space-x-2">
+      <div class="w-8 h-8 rounded-lg bg-brand text-black font-mono font-bold flex items-center justify-center">⚡</div>
+      <span class="text-xl font-bold tracking-tight">ForexBot<span class="text-brand">.Pro</span></span>
+    </a>
+    <div class="flex items-center gap-3">
+      <a href="/dashboard.html" class="text-xs text-zinc-400 hover:text-white px-3 py-1.5 border border-darkBorder rounded-lg">Go to Terminal</a>
+      <!-- Requirement 1: Hidden Admin Portal button -->
+      <a id="adminPortalBtn" href="/admin" style="display:none;" class="text-xs font-bold text-amber-400 px-3 py-1.5 border border-amber-500/40 bg-amber-500/10 rounded-lg">🛡️ Admin Portal</a>
+    </div>
+  </header>
+
+  <!-- Main Card -->
+  <main class="max-w-md w-full mx-auto my-8 bg-darkCard border border-darkBorder rounded-2xl p-6 sm:p-8 shadow-2xl">
+    <div class="text-center mb-6">
+      <h1 class="text-2xl font-extrabold text-white">Sign In & Activate Bot</h1>
+      <p class="text-zinc-400 text-xs mt-1">Enter your trading email to sync your MT5 licenses and subscriptions.</p>
+    </div>
+
+    <!-- Alert / Status -->
+    <div id="statusAlert" class="hidden p-3.5 mb-5 rounded-xl text-xs font-medium border"></div>
+
+    <form id="authForm" class="space-y-4">
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">Your Email Address</label>
+        <input type="email" id="userEmail" required placeholder="name@domain.com"
+          class="w-full bg-zinc-900 border border-darkBorder rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand font-sans transition placeholder-zinc-600" />
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">MT5 Account Number (Optional / Login ID)</label>
+        <input type="text" id="userLogin" placeholder="e.g. 50982314 or username"
+          class="w-full bg-zinc-900 border border-darkBorder rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand font-mono transition placeholder-zinc-600" />
+      </div>
+
+      <!-- Action 1: Free 3-Day Trial -->
+      <button type="button" id="btnTrial" class="w-full py-3.5 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-xl text-sm transition flex items-center justify-center gap-2">
+        <span>🚀 Start Free 3-Day Trial ($0)</span>
+      </button>
+
+      <div class="relative flex items-center justify-center my-4">
+        <div class="border-t border-darkBorder w-full"></div>
+        <span class="bg-darkCard px-3 text-[11px] text-zinc-500 uppercase tracking-widest font-mono">OR UPGRADE VIA PAYSTACK</span>
+      </div>
+
+      <!-- Paystack Subscription Buttons -->
+      <div class="space-y-3">
+        <button type="button" id="btnPayStarter" class="w-full py-3.5 bg-brand hover:bg-emerald-400 text-black font-extrabold rounded-xl text-sm transition flex items-center justify-between px-5 shadow-lg shadow-brand/20">
+          <div class="text-left">
+            <div>Starter Plan (1 MT5 Account)</div>
+            <div class="text-[10px] font-normal text-black/80 font-mono">Full Auto Trading + All 7 Strategies</div>
+          </div>
+          <span class="font-black text-base">$15/mo</span>
+        </button>
+
+        <button type="button" id="btnPayPro" class="w-full py-3.5 bg-zinc-900 hover:bg-zinc-800 border border-purple-500/40 text-purple-300 font-bold rounded-xl text-sm transition flex items-center justify-between px-5">
+          <div class="text-left">
+            <div>Pro Plan (5 MT5 Accounts)</div>
+            <div class="text-[10px] font-normal text-purple-400 font-mono">Exness + JustMarkets + HFM Support</div>
+          </div>
+          <span class="font-black text-base text-white">$30/mo</span>
+        </button>
+      </div>
+    </form>
+
+    <div class="mt-6 pt-4 border-t border-darkBorder/60 text-center">
+      <p class="text-[11px] text-zinc-500">
+        Super Admin bypass active for: <span class="text-zinc-400 font-mono">shahidauwal530@gmail.com</span>
+      </p>
+    </div>
+  </main>
+
+  <footer class="max-w-md mx-auto text-center text-xs text-zinc-600 pb-4">
+    &copy; 2026 ForexBot Pro &bull; Paystack Secured Checkout
+  </footer>
+
+  <script>
+    const ADMIN_EMAIL = 'shahidauwal530@gmail.com';
+    let paystackPublicKey = 'pk_test_sample_forexbot';
+
+    // Fetch config
+    fetch('/api/config')
+      .then(r => r.json())
+      .then(cfg => { if (cfg.paystackPublicKey) paystackPublicKey = cfg.paystackPublicKey; })
+      .catch(() => {});
+
+    // Populate existing credentials
+    const storedEmail = localStorage.getItem('email');
+    const storedLogin = localStorage.getItem('login');
+    if (storedEmail) document.getElementById('userEmail').value = storedEmail;
+    if (storedLogin) document.getElementById('userLogin').value = storedLogin;
+
+    function showAlert(msg, isSuccess) {
+      const el = document.getElementById('statusAlert');
+      el.className = `p-3.5 mb-5 rounded-xl text-xs font-medium border ${isSuccess ? 'bg-emerald-950/60 border-brand text-emerald-300' : 'bg-red-950/60 border-red-500 text-red-300'}`;
+      el.innerHTML = msg;
+      el.classList.remove('hidden');
+    }
+
+    function saveCredentials(email, login, isAdmin) {
+      localStorage.setItem('email', email);
+      localStorage.setItem('login', login || email);
+      if (isAdmin) {
+        localStorage.setItem('isAdmin', 'true');
+      }
+    }
+
+    // Free Trial
+    document.getElementById('btnTrial').addEventListener('click', () => {
+      const email = document.getElementById('userEmail').value.trim();
+      const login = document.getElementById('userLogin').value.trim() || email;
+      if (!email) {
+        showAlert('Please enter your email address to start trial.', false);
+        return;
+      }
+
+      const isAdmin = (email.toLowerCase() === ADMIN_EMAIL.toLowerCase());
+      saveCredentials(email, login, isAdmin);
+
+      if (isAdmin) {
+        showAlert('👑 Welcome Super Admin! Bypassing all paywalls forever. Redirecting...', true);
+        setTimeout(() => window.location.href = '/dashboard.html?admin=abba2025', 1200);
+        return;
+      }
+
+      showAlert('🎉 3-Day Free Trial activated successfully! Redirecting to Terminal...', true);
+      setTimeout(() => window.location.href = '/dashboard.html', 1200);
+    });
+
+    // Paystack Payment Handler
+    async function handlePaystackPayment(planName, amountUSD) {
+      const email = document.getElementById('userEmail').value.trim();
+      const login = document.getElementById('userLogin').value.trim() || email;
+      if (!email) {
+        showAlert('Please enter your email address before upgrading.', false);
+        return;
+      }
+
+      const isAdmin = (email.toLowerCase() === ADMIN_EMAIL.toLowerCase());
+      saveCredentials(email, login, isAdmin);
+
+      if (isAdmin) {
+        showAlert('👑 Admin Account Detected: All features free forever. Redirecting...', true);
+        setTimeout(() => window.location.href = '/dashboard.html?admin=abba2025', 1000);
+        return;
+      }
+
+      // Convert USD to NGN approx 1500 NGN/$ for Paystack (kobo = NGN * 100)
+      const amountKobo = amountUSD * 1500 * 100;
+
+      if (typeof PaystackPop === 'undefined' || !paystackPublicKey || paystackPublicKey.includes('sample')) {
+        // Direct sandbox instant verification fallback
+        const testRef = 'DEMO_REF_' + Date.now();
+        showAlert('Verifying subscription with Paystack...', true);
+        const res = await fetch('/api/verify-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reference: testRef, email, login, plan: planName })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showAlert(`✅ Subscription active! Plan: ${planName}. Redirecting to Terminal...`, true);
+          setTimeout(() => window.location.href = '/dashboard.html', 1500);
+        } else {
+          showAlert('Payment verification error: ' + (data.error || 'Failed'), false);
+        }
+        return;
+      }
+
+      const handler = PaystackPop.setup({
+        key: paystackPublicKey,
+        email: email,
+        amount: amountKobo,
+        currency: 'NGN',
+        ref: 'FB_' + Math.floor((Math.random() * 1000000000) + 1),
+        callback: async function(response) {
+          showAlert('Payment completed! Verifying on server...', true);
+          try {
+            const res = await fetch('/api/verify-payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                reference: response.reference,
+                email,
+                login,
+                plan: planName
+              })
+            });
+            const data = await res.json();
+            if (data.success) {
+              showAlert(`✅ Payment verified! ${planName} unlocked for 30 days.`, true);
+              setTimeout(() => window.location.href = '/dashboard.html', 1500);
+            } else {
+              showAlert('Verification failed: ' + data.error, false);
+            }
+          } catch (e) {
+            showAlert('Verification error: ' + e.message, false);
+          }
+        },
+        onClose: function() {
+          showAlert('Payment window closed.', false);
+        }
+      });
+      handler.openIframe();
+    }
+
+    document.getElementById('btnPayStarter').addEventListener('click', () => handlePaystackPayment('Starter Plan', 15));
+    document.getElementById('btnPayPro').addEventListener('click', () => handlePaystackPayment('Pro Plan', 30));
+
+    // REQUIREMENT 1: HIDE ADMIN PORTAL
+    (function initAdmin() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const adminBtn = document.getElementById('adminPortalBtn');
+      const isAdminInUrl = urlParams.get('admin') === 'abba2025';
+      const isAdminInStorage = localStorage.getItem('isAdmin') === 'true';
+
+      function showAdmin() {
+        if (adminBtn) {
+          adminBtn.style.display = 'inline-flex';
+          adminBtn.href = '/admin?admin=abba2025';
+        }
+        localStorage.setItem('isAdmin', 'true');
+      }
+
+      if (isAdminInUrl || isAdminInStorage) showAdmin();
+
+      window.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
+          e.preventDefault();
+          const pass = prompt('Enter Master Admin Password:');
+          if (pass === 'abba2025') {
+            showAdmin();
+            window.location.href = '/admin?admin=abba2025';
+          }
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

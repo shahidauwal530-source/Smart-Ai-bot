@@ -1,0 +1,31 @@
+{
+  "name": "forexbot-pro",
+  "version": "1.0.0",
+  "description": "Multi-Broker Forex Auto Trading SaaS Platform with MetaApi, Gemini Vision AI, and Paystack",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "forex",
+    "metaapi",
+    "metatrader5",
+    "mt5",
+    "gemini",
+    "vision",
+    "trading-bot",
+    "paystack",
+    "saas"
+  ],
+  "author": "ForexBot Pro Team",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "metaapi.cloud-sdk": "^26.4.1",
+    "multer": "^1.4.5-lts.1",
+    "node-fetch": "^2.7.0"
+  }
+}

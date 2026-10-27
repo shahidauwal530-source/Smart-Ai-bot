@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ForexBot Pro — All-In-One Trading Dashboard & AI Vision</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: '#00ff88',
+            brandGlow: 'rgba(0, 255, 136, 0.25)',
+            darkBg: '#0a0a0a',
+            darkSurface: '#111113',
+            darkCard: '#161619',
+            darkBorder: '#26262a'
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #0a0a0a; color: #f4f4f5; }
+    .pulse-dot {
+      box-shadow: 0 0 12px #00ff88;
+    }
+    .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scroll::-webkit-scrollbar-track { background: #0a0a0a; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #26262a; border-radius: 3px; }
+  </style>
+</head>
+<body class="bg-darkBg min-h-screen font-sans selection:bg-brand selection:text-black">
+
+  <!-- Top Navigation -->
+  <header class="border-b border-darkBorder bg-darkSurface/90 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <a href="/index.html" class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-lg bg-brand text-black font-mono font-bold flex items-center justify-center">⚡</div>
+          <span class="text-xl font-extrabold text-white">ForexBot<span class="text-brand">.Pro</span></span>
+        </a>
+        <div class="hidden sm:flex items-center gap-2 pl-3 border-l border-darkBorder text-xs text-zinc-400">
+          <span id="connectionBadge" class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-800 text-zinc-300 font-mono">
+            <span class="w-2 h-2 rounded-full bg-zinc-500"></span> Disconnected
+          </span>
+          <span id="userEmailBadge" class="hidden font-mono text-[11px] text-zinc-400"></span>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-3">
+        <button id="btnSwitchAccount" class="px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:text-white bg-darkCard border border-darkBorder hover:border-zinc-500 rounded-lg transition">
+          Switch Account
+        </button>
+
+        <!-- REQUIREMENT 1: HIDE ADMIN PORTAL (display:none by default) -->
+        <a id="adminPortalBtn" href="/admin" style="display:none;" class="px-3 py-1.5 text-xs font-bold text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded-lg hover:bg-amber-500 hover:text-black transition flex items-center gap-1">
+          <span>🛡️ Master Admin</span>
+        </a>
+
+        <a href="/index.html#setup-guide" class="text-xs text-zinc-400 hover:text-white px-2.5 py-1.5">Setup Guide</a>
+        <a href="/login.html" class="px-3 py-1.5 text-xs font-bold text-black bg-brand hover:bg-emerald-400 rounded-lg transition">
+          Billing / License
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+
+    <!-- Global Notice Banner -->
+    <div id="noticeBanner" class="hidden p-3.5 rounded-xl border text-xs font-mono flex items-center justify-between">
+      <span id="noticeText"></span>
+      <button onclick="document.getElementById('noticeBanner').classList.add('hidden')" class="text-zinc-400 hover:text-white">✕</button>
+    </div>
+
+    <!-- SECTION 1: TOP - BROKER & MT5 ACCOUNT CONNECTION -->
+    <section class="bg-darkCard border border-darkBorder rounded-2xl p-5 sm:p-6 shadow-xl">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-darkBorder">
+        <div>
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <span>🔌 MT5 Broker Direct Connect</span>
+            <span class="text-xs font-mono font-normal px-2 py-0.5 rounded bg-brand/10 text-brand border border-brand/20">Live MetaApi / Sandbox</span>
+          </h2>
+          <p class="text-xs text-zinc-400 mt-1">Connect your Exness, JustMarkets, or HFM MetaTrader 5 account for instantaneous trade execution.</p>
+        </div>
+        <!-- Balance / Equity Quick Display -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div class="bg-darkSurface border border-darkBorder px-3.5 py-2 rounded-xl">
+            <span class="text-[10px] font-mono uppercase text-zinc-500">Balance</span>
+            <div id="displayBalance" class="text-base sm:text-lg font-black text-white font-mono">$10,000.00</div>
+          </div>
+          <div class="bg-darkSurface border border-darkBorder px-3.5 py-2 rounded-xl">
+            <span class="text-[10px] font-mono uppercase text-zinc-500">Equity</span>
+            <div id="displayEquity" class="text-base sm:text-lg font-black text-brand font-mono">$10,000.00</div>
+          </div>
+          <div class="bg-darkSurface border border-darkBorder px-3.5 py-2 rounded-xl">
+            <span class="text-[10px] font-mono uppercase text-zinc-500">Floating P/L</span>
+            <div id="displayProfit" class="text-base sm:text-lg font-black text-zinc-300 font-mono">$0.00</div>
+          </div>
+          <div class="bg-darkSurface border border-darkBorder px-3.5 py-2 rounded-xl">
+            <span class="text-[10px] font-mono uppercase text-zinc-500">Open Pos</span>
+            <div id="displayPositions" class="text-base sm:text-lg font-black text-amber-400 font-mono">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Broker Connect Form -->
+      <form id="connectForm" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 mt-5">
+        <div>
+          <label class="block text-[11px] font-semibold uppercase text-zinc-400 mb-1">Broker Platform</label>
+          <select id="brokerSelect" class="w-full bg-darkSurface border border-darkBorder rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-brand font-semibold">
+            <option value="Exness" data-server="Exness-MT5Real">Exness (Exness-MT5Real)</option>
+            <option value="JustMarkets" data-server="JustMarkets-Live">JustMarkets (JustMarkets-Live)</option>
+            <option value="HFM" data-server="HFMarketsSV-Live">HFM (HFMarketsSV-Live)</option>
+            <option value="Custom" data-server="MetaQuotes-Demo">Custom MT5 Broker</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold uppercase text-zinc-400 mb-1">MT5 Account Number</label>
+          <input type="text" id="mt5Login" required placeholder="e.g. 50982314"
+            class="w-full bg-darkSurface border border-darkBorder rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-brand font-mono placeholder-zinc-600" />
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold uppercase text-zinc-400 mb-1">Trading Password</label>
+          <input type="password" id="mt5Password" required placeholder="••••••••"
+            class="w-full bg-darkSurface border border-darkBorder rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-brand font-mono placeholder-zinc-600" />
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold uppercase text-zinc-400 mb-1">Server Name</label>
+          <input type="text" id="mt5Server" value="Exness-MT5Real" placeholder="Exness-MT5Real"
+            class="w-full bg-darkSurface border border-darkBorder rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-brand font-mono placeholder-zinc-600" />
+        </div>
+
+        <div class="flex items-end">
+          <button type="submit" id="btnConnect" class="w-full py-2.5 bg-brand hover:bg-emerald-400 text-black font-extrabold rounded-xl text-xs transition shadow-lg shadow-brand/20 flex items-center justify-center gap-1.5">
+            <span>⚡ CONNECT MT5</span>
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- SECTION 2: MIDDLE - SCREENSHOT UPLOAD & GEMINI VISION AI SMART -->
+    <section class="bg-darkCard border border-darkBorder rounded-2xl p-5 sm:p-6 shadow-xl">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-darkBorder gap-2">
+        <div>
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <span>📸 AI Chart Screenshot Analyzer</span>
+            <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Gemini Vision (FREE)</span>
+          </h2>
+          <p class="text-xs text-zinc-400 mt-0.5">Upload a TradingView or MT5 candlestick screenshot. AI extracts entry, SL, TP, and delivers an instant execution setup.</p>
+        </div>
+        <div class="text-xs font-mono text-zinc-400">
+          Model: <span class="text-brand font-bold">gemini-1.5-flash</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-5">
+        <!-- Controls Column -->
+        <div class="lg:col-span-5 space-y-4">
+          <!-- File Input -->
+          <div>
+            <label class="block text-[11px] font-semibold uppercase text-zinc-400 mb-1">Chart Screenshot (Image)</label>
+            <div id="dropZone" class="border-2 border-dashed border-darkBorder hover:border-brand/60 rounded-xl p-4 text-center cursor-pointer transition bg-darkSurface/50">
+              <input type="file" id="screenshotFile" accept="image/*" class="hidden" />
+              <div id="dropText">
+                <div class="text-2xl mb-1">📁</div>
+                <div class="text-xs font-bold text-white">Click or drag & drop chart image</div>
+                <div class="text-[10px] text-zinc-500 mt-0.5">PNG, JPG, WebP supported</div>
+              </div>
+              <div id="previewContainer" class="hidden">
+                <img id="imagePreview" class="max-h-36 mx-auto rounded-lg border border-darkBorder object-contain" />
+                <span id="fileNameDisplay" class="text-[11px] font-mono text-zinc-400 block mt-2"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Selectors: Symbol, Lot, Count, Fast TP -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] font-semibold uppercase text-zinc-400 mb-1">Symbol Pair</label>
+              <select id="analysisSymbol" class="w-full bg-darkSurface border border-darkBorder rounded-xl px-3 py-2 text-xs text-white font-mono focus:border-brand">
+                <option value="XAUUSD">XAUUSD (Gold)</option>
+                <option value="EURUSD">EURUSD</option>
+                <option value="GBPUSD">GBPUSD</option>
+                <option value="USDJPY">USDJPY</option>
+                <option value="GBPJPY">GBPJPY</option>
+                <option value="EURJPY">EURJPY</option>
+                <option value="BTCUSD">BTCUSD</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-semibold uppercase text-zinc-400 mb-1">Lot Size</label>
+              <select id="tradeLot" class="w-full bg-darkSurface border border-darkBorder rounded-xl px-3 py-2 text-xs text-white font-mono focus:border-brand">
+                <option value="0.01">0.01 Lot (Micro)</option>
+                <option value="0.05">0.05 Lot</option>
+                <option value="0.10">0.10 Lot (Mini)</option>
+                <option value="0.20">0.20 Lot</option>
+                <option value="0.50">0.50 Lot</option>
+                <option value="1.00">1.00 Lot (Standard)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] font-semibold uppercase text-zinc-400 mb-1">Trade Count (Multi-Order)</label>
+              <select id="tradeCount" class="w-full bg-darkSurface border border-darkBorder rounded-xl px-3 py-2 text-xs text-white font-mono focus:border-brand">
+                <option value="1">1 Trade</option>
+                <option value="2">2 Trades</option>
+                <option value="3">3 Trades</option>
+                <option value="5" selected>5 Trades (Scale In)</option>
+                <option value="10">10 Trades (Max Multi)</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-semibold uppercase text-zinc-400 mb-1">Fast TP Selector</label>
+              <select id="fastTpSelect" class="w-full bg-darkSurface border border-darkBorder rounded-xl px-3 py-2 text-xs text-white font-mono focus:border-brand">
+                <option value="scalper">Scalper: 30 pips (~30s)</option>
+                <option value="fast" selected>Fast: 60 pips (1-2min)</option>
+                <option value="normal">Normal: 120 pips</option>
+                <option value="hold">Hold: 300 pips (Swing)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Analyze Button -->
+          <button id="btnAnalyze" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-brand hover:from-emerald-400 hover:to-brand text-black font-extrabold rounded-xl text-sm transition shadow-lg shadow-brand/20 flex items-center justify-center gap-2">
+            <span>✨ ANALYZE SCREENSHOT WITH AI SMART (FREE)</span>
+          </button>
+        </div>
+
+        <!-- Result Column -->
+        <div class="lg:col-span-7 bg-darkSurface border border-darkBorder rounded-xl p-5 flex flex-col justify-between">
+          <div id="analysisPlaceholder" class="text-center py-10">
+            <div class="text-4xl mb-2 text-zinc-600">📊</div>
+            <div class="text-sm font-semibold text-zinc-300">No chart analysis yet</div>
+            <p class="text-xs text-zinc-500 mt-1 max-w-sm mx-auto">Upload an image or hit Analyze. Gemini Vision AI will detect the candlestick patterns and output precision levels.</p>
+          </div>
+
+          <div id="analysisResult" class="hidden space-y-4">
+            <!-- Header Badges -->
+            <div class="flex items-center justify-between pb-3 border-b border-darkBorder">
+              <div class="flex items-center gap-2">
+                <span id="resActionBadge" class="px-3 py-1 rounded-lg text-xs font-black font-mono uppercase bg-emerald-500 text-black">BUY</span>
+                <span id="resSymbol" class="font-mono font-bold text-white text-sm">XAUUSD</span>
+                <span id="resTimeframe" class="text-xs text-zinc-400 font-mono">M5</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span id="resStrategy" class="text-xs px-2.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-semibold">GOLD SCALP PRO</span>
+                <span id="resConfidence" class="text-xs font-mono font-bold text-brand px-2 py-0.5 rounded bg-brand/10 border border-brand/20">85% Confidence</span>
+              </div>
+            </div>
+
+            <!-- Price Metrics Grid -->
+            <div class="grid grid-cols-3 sm:grid-cols-4 gap-2 text-center font-mono">
+              <div class="bg-darkCard p-2.5 rounded-lg border border-darkBorder">
+                <div class="text-[10px] text-zinc-500 uppercase">Entry</div>
+                <div id="resEntry" class="text-sm font-bold text-white mt-0.5">2652.40</div>
+              </div>
+              <div class="bg-darkCard p-2.5 rounded-lg border border-darkBorder">
+                <div class="text-[10px] text-red-400 uppercase">Stop Loss</div>
+                <div id="resSL" class="text-sm font-bold text-red-400 mt-0.5">2648.00</div>
+              </div>
+              <div class="bg-darkCard p-2.5 rounded-lg border border-darkBorder">
+                <div class="text-[10px] text-emerald-400 uppercase">Target TP</div>
+                <div id="resTP" class="text-sm font-bold text-emerald-400 mt-0.5">2660.00</div>
+              </div>
+              <div class="bg-darkCard p-2.5 rounded-lg border border-darkBorder">
+                <div class="text-[10px] text-zinc-500 uppercase">R:R Ratio</div>
+                <div id="resRR" class="text-sm font-bold text-zinc-300 mt-0.5">1:2</div>
+              </div>
+            </div>
+
+            <!-- Analysis Reasons -->
+            <div class="space-y-2 text-xs">
+              <div class="bg-darkCard p-3 rounded-lg border border-darkBorder">
+                <span class="text-zinc-400 font-semibold block mb-0.5">Technical Rationale:</span>
+                <p id="resReason" class="text-zinc-200 leading-relaxed"></p>
+              </div>
+
+              <!-- Hausa Analysis Note (Requirement 7) -->
+              <div class="bg-emerald-950/20 border border-brand/20 p-3 rounded-lg">
+                <span class="text-brand font-semibold block mb-0.5">Bayani Da Hausa (AI Reason):</span>
+                <p id="resReasonHausa" class="text-emerald-200/90 leading-relaxed font-sans"></p>
+              </div>
+            </div>
+
+            <!-- Profit / Cost Estimation -->
+            <div class="flex items-center justify-between text-xs font-mono text-zinc-400 pt-1">
+              <div>Your Cost: <span id="resCost" class="text-brand font-bold">N0 (Free AI)</span></div>
+              <div>Estimated Target: <span id="resProfit" class="text-emerald-400 font-bold">$15.00+</span></div>
+            </div>
+
+            <!-- MULTI-TRADE TRIGGER BUTTON (Requirement 6) -->
+            <div id="multiTradeContainer" class="pt-2">
+              <button id="btnOpenMultiTrade" class="w-full py-3.5 bg-brand hover:bg-emerald-400 text-black font-extrabold rounded-xl text-sm transition shadow-xl shadow-brand/25 flex items-center justify-center gap-2">
+                <span id="multiTradeButtonText">BUDE 5 TRADES YANZU - Lot 0.01</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: BOTTOM - AUTOMATED BOT CONFIG & 7 STRATEGIES -->
+    <section class="bg-darkCard border border-darkBorder rounded-2xl p-5 sm:p-6 shadow-xl">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-darkBorder gap-2">
+        <div>
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <span>⚙️ Autonomous 24/7 Bot Configuration</span>
+            <span id="botActiveStatus" class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-zinc-800 text-zinc-400">STATUS: STOPPED</span>
+          </h2>
+          <p class="text-xs text-zinc-400 mt-0.5">Select from 7 quantitative strategies. Automatically checks 5M candle EMAs, RSI, and executes live orders.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="btnStartBot" class="px-5 py-2.5 bg-brand hover:bg-emerald-400 text-black font-extrabold text-xs rounded-xl transition shadow-md shadow-brand/20 flex items-center gap-1.5">
+            <span>▶ START BOT</span>
+          </button>
+          <button id="btnStopBot" class="px-5 py-2.5 bg-zinc-800 hover:bg-red-900/50 hover:text-red-300 text-zinc-300 font-bold text-xs rounded-xl border border-darkBorder transition flex items-center gap-1.5">
+            <span>⏹ STOP BOT</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Strategy Selector & Inputs -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-5">
+        <!-- Strategy Dropdown (Requirement 3) -->
+        <div class="lg:col-span-2">
+          <label class="block text-[11px] font-semibold uppercase text-zinc-400 mb-1">Trading Strategy</label>
+          <select id="botStrategy" class="w-full bg-darkSurface border border-darkBorder rounded-xl px-3 py-2.5 text-xs text-white font-semibold focus:border-brand">
+            <option value="london_breakout">🔥 London Breakout</option>
+            <option value="gold_scalper" selected>👑 Gold Scalper (XAUUSD King)</option>
+            <option value="trend_rider">🛡️ Trend Rider (Safe)</option>
+            <option value="mean_reversion">🔄 Mean Reversion</option>
+            <option value="news_hunter">📰 News Hunter</option>
+            <option value="safe_hedge">⚖️ Safe Hedge</option>
+            <option value="naija_overnight">🌙 Naija Overnight</option>
+          </select>
+          <p id="strategyDesc" class="text-[11px] text-zinc-500 mt-1.5 leading-relaxed">
+            XAUUSD M5 Bollinger Bands (20,2) + RSI 14 scalping for 5-15 quick pips.
+          </p>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold uppercase text-zinc-400 mb-1">Pair Symbol</label>
+          <select id="botSymbol" class="w-full bg-darkSurface border border-darkBorder rounded-xl px-3 py-2.5 text-xs text-white font-mono focus:border-brand">
+            <option value="XAUUSD">XAUUSD</option>
+            <option value="EURUSD">EURUSD</option>
+            <option value="GBPUSD">GBPUSD</option>
+            <option value="USDJPY">USDJPY</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold uppercase text-zinc-400 mb-1">Lot Size</label>
+          <input type="number" id="botLot" value="0.01" step="0.01" min="0.01" max="10.0"
+            class="w-full bg-darkSurface border border-darkBorder rounded-xl px-3 py-2.5 text-xs text-white font-mono focus:border-brand" />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4 pt-4 border-t border-darkBorder/60 items-center">
+        <div>
+          <label class="block text-[11px] font-semibold uppercase text-zinc-400 mb-1">Stop Loss (Pips)</label>
+          <input type="number" id="botSL" value="30"
+            class="w-full bg-darkSurface border border-darkBorder rounded-xl px-3 py-2 text-xs text-white font-mono focus:border-brand" />
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold uppercase text-zinc-400 mb-1">Take Profit (Pips)</label>
+          <input type="number" id="botTP" value="60"
+            class="w-full bg-darkSurface border border-darkBorder rounded-xl px-3 py-2 text-xs text-white font-mono focus:border-brand" />
+        </div>
+
+        <!-- News Filter ON -->
+        <div class="flex items-center gap-2 pt-4 sm:pt-0">
+          <input type="checkbox" id="checkNewsFilter" checked
+            class="w-4 h-4 rounded text-brand bg-darkSurface border-darkBorder focus:ring-brand focus:ring-offset-0" />
+          <label for="checkNewsFilter" class="text-xs font-semibold text-zinc-300">
+            News Filter (Pause 12-14 & 18-20 UTC)
+          </label>
+        </div>
+
+        <!-- Martingale OFF (Disabled Checked) -->
+        <div class="flex items-center gap-2 pt-2 sm:pt-0">
+          <input type="checkbox" id="checkMartingaleOff" checked disabled
+            class="w-4 h-4 rounded text-brand bg-zinc-800 border-zinc-700 cursor-not-allowed" />
+          <label for="checkMartingaleOff" class="text-xs font-semibold text-zinc-400 cursor-not-allowed">
+            Martingale OFF <span class="text-[10px] text-brand">(Safe Mode Locked)</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Live Polling Status Console (Requirement 6) -->
+      <div class="mt-6 pt-5 border-t border-darkBorder">
+        <div class="flex items-center justify-between text-xs text-zinc-400 mb-2">
+          <span class="font-semibold uppercase tracking-wider text-zinc-500 font-mono">Live Bot Status Stream (Auto-polled 5s)</span>
+          <span class="flex items-center gap-1.5 font-mono text-[11px]">
+            <span class="w-2 h-2 rounded-full bg-brand pulse-dot"></span> Polling Active
+          </span>
+        </div>
+        <div id="liveConsole" class="bg-darkSurface border border-darkBorder rounded-xl p-3 text-xs font-mono text-zinc-300 space-y-1 max-h-36 overflow-y-auto custom-scroll">
+          <div class="text-zinc-500">[System Initialized]: Ready to connect MT5 broker and trigger algorithmic trading loops.</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="py-6 border-t border-darkBorder text-center text-xs text-zinc-600 mt-10">
+    ForexBot Pro Multi-Broker Automation Engine &bull; Zero Server Latency
+  </footer>
+
+  <!-- DASHBOARD CONTROLLER SCRIPT -->
+  <script>
+    const ADMIN_EMAIL = 'shahidauwal530@gmail.com';
+    let currentLogin = localStorage.getItem('login') || '';
+    let currentEmail = localStorage.getItem('email') || '';
+    let lastGeneratedSignal = null;
+    let pollInterval = null;
+
+    // Strategies Descriptions Map
+    const strategyDescriptions = {
+      london_breakout: 'Trades 08:00 - 11:00 UTC London open. Exploits breakout past Asian session high/low on EURUSD & GBPUSD.',
+      gold_scalper: 'XAUUSD M5 Bollinger Bands (20,2) + RSI 14. BUY RSI<30, SELL RSI>70, scalps rapid 5-15 pip bursts.',
+      trend_rider: 'EMA9 > EMA21 > EMA50 bullish cascade and RSI 40-68 corridor for conservative trend following.',
+      mean_reversion: 'Monitors price extension >2 ATR from MA50 and triggers reverse snapback trades when RSI hits extremes.',
+      news_hunter: 'Trades high-impact macroeconomic spikes during 12:00-14:00 and 18:00-20:00 UTC windows.',
+      safe_hedge: 'Opens BUY and SELL in parallel, locks in profits upon directional breakout with zero blowup risk.',
+      naija_overnight: 'Calibrated specifically for West Africa Time (21:00 - 05:00 WAT / 20:00 - 04:00 UTC) exploiting low-spread channel ranges.'
+    };
+
+    document.getElementById('botStrategy').addEventListener('change', (e) => {
+      document.getElementById('strategyDesc').innerText = strategyDescriptions[e.target.value] || '';
+    });
+
+    // Auto-fill server placeholder based on broker selector (Requirement 6)
+    document.getElementById('brokerSelect').addEventListener('change', (e) => {
+      const selected = e.target.options[e.target.selectedIndex];
+      const defaultServer = selected.getAttribute('data-server') || 'Exness-MT5Real';
+      document.getElementById('mt5Server').value = defaultServer;
+    });
+
+    function logConsole(msg, type = 'info') {
+      const consoleEl = document.getElementById('liveConsole');
+      const time = new Date().toLocaleTimeString();
+      const div = document.createElement('div');
+      let colorClass = 'text-zinc-300';
+      if (type === 'success') colorClass = 'text-brand';
+      if (type === 'error') colorClass = 'text-red-400';
+      if (type === 'warn') colorClass = 'text-yellow-400';
+      div.className = colorClass;
+      div.innerHTML = `<span class="text-zinc-500">[${time}]</span> ${msg}`;
+      consoleEl.prepend(div);
+    }
+
+    function showNotice(msg, isSuccess) {
+      const banner = document.getElementById('noticeBanner');
+      banner.className = `p-3.5 rounded-xl border text-xs font-mono flex items-center justify-between ${isSuccess ? 'bg-emerald-950/50 border-brand text-brand' : 'bg-red-950/50 border-red-500 text-red-300'}`;
+      document.getElementById('noticeText').innerText = msg;
+      banner.classList.remove('hidden');
+    }
+
+    // Initialize user session
+    if (!currentLogin) {
+      currentLogin = '50982' + Math.floor(100 + Math.random() * 900);
+      localStorage.setItem('login', currentLogin);
+    }
+    document.getElementById('mt5Login').value = currentLogin;
+
+    if (currentEmail) {
+      const badge = document.getElementById('userEmailBadge');
+      badge.innerText = currentEmail;
+      badge.classList.remove('hidden');
+    }
+
+    // Connect form handler
+    document.getElementById('connectForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const broker = document.getElementById('brokerSelect').value;
+      const login = document.getElementById('mt5Login').value.trim();
+      const password = document.getElementById('mt5Password').value;
+      const server = document.getElementById('mt5Server').value.trim();
+      const email = currentEmail || localStorage.getItem('email') || (login + '@forexbot.pro');
+
+      currentLogin = login;
+      localStorage.setItem('login', login);
+
+      const btn = document.getElementById('btnConnect');
+      btn.disabled = true;
+      btn.innerHTML = 'Connecting...';
+
+      try {
+        logConsole(`Initiating connection to ${broker} server ${server}...`, 'warn');
+        const res = await fetch('/api/connect', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ broker, login, password, server, email })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          showNotice(`Connected to MT5 (${broker}) successfully! Balance: $${data.balance}`, true);
+          logConsole(`Connected to MT5 (${data.mode}). Balance: $${data.balance}, Equity: $${data.equity}`, 'success');
+          document.getElementById('displayBalance').innerText = `$${parseFloat(data.balance).toFixed(2)}`;
+          document.getElementById('displayEquity').innerText = `$${parseFloat(data.equity).toFixed(2)}`;
+          const connBadge = document.getElementById('connectionBadge');
+          connBadge.className = 'flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-950 text-brand border border-brand/30 font-mono text-xs';
+          connBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-brand pulse-dot"></span> ${broker} Connected`;
+        } else {
+          showNotice(data.error || 'Failed to connect account', false);
+          logConsole(`Connection failed: ${data.error}`, 'error');
+        }
+      } catch (err) {
+        showNotice('Connection network error: ' + err.message, false);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>⚡ CONNECT MT5</span>';
+      }
+    });
+
+    // Switch account handler (Requirement 2)
+    document.getElementById('btnSwitchAccount').addEventListener('click', async () => {
+      if (!confirm('Clear current MT5 connection and connect a new account?')) return;
+      try {
+        await fetch('/api/switch-account', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ login: currentLogin })
+        });
+        showNotice('Account disconnected. Ready for new MT5 account.', true);
+        logConsole('Account cleared via Switch Account endpoint.', 'info');
+        document.getElementById('mt5Password').value = '';
+        const connBadge = document.getElementById('connectionBadge');
+        connBadge.className = 'flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-800 text-zinc-300 font-mono text-xs';
+        connBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-zinc-500"></span> Disconnected`;
+      } catch (e) {
+        alert(e.message);
+      }
+    });
+
+    // Dropzone and screenshot handling
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('screenshotFile');
+
+    dropZone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', handleFile);
+
+    function handleFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        document.getElementById('imagePreview').src = evt.target.result;
+        document.getElementById('fileNameDisplay').innerText = file.name;
+        document.getElementById('dropText').classList.add('hidden');
+        document.getElementById('previewContainer').classList.remove('hidden');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Analyze screenshot button
+    document.getElementById('btnAnalyze').addEventListener('click', async () => {
+      const file = fileInput.files[0];
+      const symbol = document.getElementById('analysisSymbol').value;
+      const btn = document.getElementById('btnAnalyze');
+
+      btn.disabled = true;
+      btn.innerHTML = 'Analyzing Chart with Gemini Vision AI...';
+      logConsole(`Sending chart screenshot to Gemini Vision AI for ${symbol}...`, 'warn');
+
+      try {
+        const formData = new FormData();
+        if (file) formData.append('screenshot', file);
+        formData.append('symbol', symbol);
+        formData.append('login', currentLogin);
+        formData.append('email', currentEmail);
+
+        const res = await fetch('/api/analyze-screenshot', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || 'Analysis failed');
+        }
+
+        lastGeneratedSignal = data;
+        displaySignalResult(data);
+        logConsole(`Gemini Vision Signal: ${data.action} ${data.symbol} (${data.confidence}% confidence)`, 'success');
+      } catch (err) {
+        showNotice('Analysis error: ' + err.message, false);
+        logConsole(`Analysis error: ${err.message}`, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>✨ ANALYZE SCREENSHOT WITH AI SMART (FREE)</span>';
+      }
+    });
+
+    function displaySignalResult(data) {
+      document.getElementById('analysisPlaceholder').classList.add('hidden');
+      const resContainer = document.getElementById('analysisResult');
+      resContainer.classList.remove('hidden');
+
+      const actionBadge = document.getElementById('resActionBadge');
+      actionBadge.innerText = data.action;
+      if (data.action === 'BUY') {
+        actionBadge.className = 'px-3 py-1 rounded-lg text-xs font-black font-mono uppercase bg-emerald-500 text-black';
+      } else if (data.action === 'SELL') {
+        actionBadge.className = 'px-3 py-1 rounded-lg text-xs font-black font-mono uppercase bg-red-500 text-white';
+      } else {
+        actionBadge.className = 'px-3 py-1 rounded-lg text-xs font-black font-mono uppercase bg-zinc-700 text-zinc-300';
+      }
+
+      document.getElementById('resSymbol').innerText = data.symbol;
+      document.getElementById('resTimeframe').innerText = data.timeframe || 'M5';
+      document.getElementById('resStrategy').innerText = data.strategy || 'AI SMART';
+      document.getElementById('resConfidence').innerText = `${data.confidence}% Confidence`;
+      document.getElementById('resEntry').innerText = data.entry;
+      document.getElementById('resSL').innerText = data.sl;
+      document.getElementById('resTP').innerText = data.tp;
+      document.getElementById('resRR').innerText = data.risk_reward || '1:2';
+      document.getElementById('resReason').innerText = data.reason || 'Optimal breakout volume and structure alignment.';
+      document.getElementById('resReasonHausa').innerText = data.reason_hausa || 'An tabbatar da kyawawan alamu na kasuwanci da fasahar AI.';
+
+      updateMultiTradeButton();
+    }
+
+    // Dynamic Multi-Trade button label
+    function updateMultiTradeButton() {
+      const count = document.getElementById('tradeCount').value;
+      const lot = document.getElementById('tradeLot').value;
+      const btnText = document.getElementById('multiTradeButtonText');
+      btnText.innerText = `BUDE ${count} TRADES YANZU - Lot ${lot}`;
+
+      const container = document.getElementById('multiTradeContainer');
+      if (lastGeneratedSignal && lastGeneratedSignal.confidence >= 70 && lastGeneratedSignal.action !== 'HOLD') {
+        container.classList.remove('hidden');
+      } else {
+        container.classList.add('hidden');
+      }
+    }
+
+    document.getElementById('tradeCount').addEventListener('change', updateMultiTradeButton);
+    document.getElementById('tradeLot').addEventListener('change', updateMultiTradeButton);
+
+    // Multi-Trade execution
+    document.getElementById('btnOpenMultiTrade').addEventListener('click', async () => {
+      if (!lastGeneratedSignal) return;
+      const count = document.getElementById('tradeCount').value;
+      const lot = document.getElementById('tradeLot').value;
+      const btn = document.getElementById('btnOpenMultiTrade');
+
+      btn.disabled = true;
+      btn.innerText = `Executing ${count} Orders...`;
+      logConsole(`Firing ${count} orders on ${lastGeneratedSignal.symbol} at ${lot} lot...`, 'warn');
+
+      try {
+        const res = await fetch('/api/open-multi-trade', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            login: currentLogin,
+            email: currentEmail,
+            symbol: lastGeneratedSignal.symbol,
+            action: lastGeneratedSignal.action,
+            entry: lastGeneratedSignal.entry,
+            sl: lastGeneratedSignal.sl,
+            tp: lastGeneratedSignal.tp,
+            lot: lot,
+            count: count
+          })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          showNotice(`Successfully fired ${data.executedCount} ${lastGeneratedSignal.action} trades on MT5!`, true);
+          logConsole(`Orders completed: ${data.message}`, 'success');
+        } else {
+          showNotice(data.error || 'Execution failed', false);
+          logConsole(`Multi-trade error: ${data.error}`, 'error');
+        }
+      } catch (err) {
+        showNotice(err.message, false);
+      } finally {
+        btn.disabled = false;
+        updateMultiTradeButton();
+      }
+    });
+
+    // Start Bot Handler
+    document.getElementById('btnStartBot').addEventListener('click', async () => {
+      const symbol = document.getElementById('botSymbol').value;
+      const lot = document.getElementById('botLot').value;
+      const sl = document.getElementById('botSL').value;
+      const tp = document.getElementById('botTP').value;
+      const newsFilter = document.getElementById('checkNewsFilter').checked;
+      const strategyId = document.getElementById('botStrategy').value;
+
+      try {
+        logConsole(`Starting autonomous bot with ${strategyId} on ${symbol}...`, 'warn');
+        const res = await fetch('/api/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            login: currentLogin,
+            email: currentEmail,
+            symbol,
+            lot,
+            sl,
+            tp,
+            newsFilter,
+            strategyId,
+            signal: lastGeneratedSignal
+          })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          document.getElementById('botActiveStatus').className = 'text-xs font-mono font-bold px-2 py-0.5 rounded bg-brand/20 text-brand border border-brand/30';
+          document.getElementById('botActiveStatus').innerText = 'STATUS: ACTIVE (24/7)';
+          showNotice('ForexBot is now running automated trading loop!', true);
+          logConsole('Autonomous bot started. Checking market every 30 seconds.', 'success');
+        } else {
+          showNotice(data.error || 'Failed to start bot', false);
+        }
+      } catch (err) {
+        showNotice(err.message, false);
+      }
+    });
+
+    // Stop Bot Handler
+    document.getElementById('btnStopBot').addEventListener('click', async () => {
+      try {
+        const res = await fetch('/api/stop', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ login: currentLogin })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          document.getElementById('botActiveStatus').className = 'text-xs font-mono font-bold px-2 py-0.5 rounded bg-zinc-800 text-zinc-400';
+          document.getElementById('botActiveStatus').innerText = 'STATUS: STOPPED';
+          showNotice('ForexBot stopped.', true);
+          logConsole('Automated trading loop halted.', 'warn');
+        }
+      } catch (err) {
+        showNotice(err.message, false);
+      }
+    });
+
+    // Live Polling GET /api/status/:login every 5 seconds (Requirement 6)
+    async function pollStatus() {
+      if (!currentLogin) return;
+      try {
+        const res = await fetch(`/api/status/${currentLogin}`);
+        if (!res.ok) return;
+        const data = await res.json();
+
+        if (data.balance !== undefined) {
+          document.getElementById('displayBalance').innerText = `$${parseFloat(data.balance).toFixed(2)}`;
+          document.getElementById('displayEquity').innerText = `$${parseFloat(data.equity).toFixed(2)}`;
+          document.getElementById('displayPositions').innerText = data.openPositions || 0;
+
+          const profitEl = document.getElementById('displayProfit');
+          const pVal = parseFloat(data.profit || 0);
+          profitEl.innerText = `${pVal >= 0 ? '+' : ''}$${pVal.toFixed(2)}`;
+          profitEl.className = `text-base sm:text-lg font-black font-mono ${pVal > 0 ? 'text-brand' : (pVal < 0 ? 'text-red-400' : 'text-zinc-300')}`;
+        }
+
+        if (data.running) {
+          document.getElementById('botActiveStatus').className = 'text-xs font-mono font-bold px-2 py-0.5 rounded bg-brand/20 text-brand border border-brand/30';
+          document.getElementById('botActiveStatus').innerText = 'STATUS: ACTIVE (24/7)';
+        }
+
+        if (data.openPositions > 0) {
+          logConsole(`Status Update: ${data.openPositions} active positions. Equity: $${data.equity.toFixed(2)} (PnL: $${data.profit.toFixed(2)})`);
+        }
+      } catch (err) {
+        // quiet poll
+      }
+    }
+
+    pollInterval = setInterval(pollStatus, 5000);
+    pollStatus();
+
+    // REQUIREMENT 1: HIDE ADMIN PORTAL
+    (function initAdmin() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const adminBtn = document.getElementById('adminPortalBtn');
+      const isAdminInUrl = urlParams.get('admin') === 'abba2025';
+      const isAdminInStorage = localStorage.getItem('isAdmin') === 'true';
+
+      function showAdmin() {
+        if (adminBtn) {
+          adminBtn.style.display = 'inline-flex';
+          adminBtn.href = '/admin?admin=abba2025';
+        }
+        localStorage.setItem('isAdmin', 'true');
+      }
+
+      if (isAdminInUrl || isAdminInStorage) showAdmin();
+
+      window.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
+          e.preventDefault();
+          const pass = prompt('Enter Master Admin Password:');
+          if (pass === 'abba2025') {
+            showAdmin();
+            window.location.href = '/admin?admin=abba2025';
+          }
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
